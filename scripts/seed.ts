@@ -11,8 +11,9 @@ type Record = {
 
 // Helper to generate random coordinates as a string "lat,lon"
 function randomCoords() {
-	const lat = (Math.random() * 180 - 90).toFixed(6);
-	const lon = (Math.random() * 360 - 180).toFixed(6);
+	const lat = (Math.random() * (41.5 - 38.8) + 38.8).toFixed(6);
+	const lon = (Math.random() * (46.7 - 43.3) + 43.3).toFixed(6);
+	
 	return `${lat},${lon}`;
 }
 
@@ -26,6 +27,7 @@ function randomDate() {
 	const start = new Date(2005, 0, 1).getTime();
 	const end = new Date().getTime();
 	const date = new Date(start + Math.random() * (end - start));
+	
 	return date.toISOString();
 }
 
