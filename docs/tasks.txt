@@ -1,0 +1,171 @@
+```text
+Prompt 1: Project scaffolding and basic config
+
+Context:
+- We need a SvelteKit + TypeScript project.
+- We use Drizzle ORM with SQLite, Vitest for testing, ESLint + Prettier.
+- We want Husky pre‑commit for lint & test.
+
+Task:
+1. Initialize package.json with scripts:
+   - "dev", "build", "preview", "test", "lint", "format"
+2. Install dependencies:
+   - sveltekit, @sveltejs/adapter-node, typescript, drizzle-orm, sqlite3
+   - devDependencies: vitest, @testing-library/svelte, eslint, prettier, husky, lint-staged
+3. Create tsconfig.json and svelte.config.js configured for SvelteKit + TypeScript.
+4. Set up Vitest config file at tests/vitest.config.ts.
+5. Configure ESLint and Prettier, add lint‑staged and Husky pre‑commit to run lint and tests.
+6. Ensure git is initialized.
+
+Deliverables:
+- package.json, tsconfig.json, svelte.config.js, tests/vitest.config.ts, .eslintrc.js, .prettierrc
+- .husky/, lint‑staged config
+- Basic README with setup commands.
+```
+
+```text
+Prompt 2: Define Drizzle schema and client
+
+Context:
+- Project scaffold exists.
+- We want Drizzle ORM for SQLite.
+
+Task:
+1. Create `src/lib/server/db/schema.ts`:
+   - Define `points` table with columns:
+     id: integer.primaryKey
+     coords: text
+     name: text
+     created_at: date
+2. Create `src/lib/server/db/index.ts`:
+   - Initialize Drizzle client pointing at `local.db`.
+3. Write a Vitest unit test `tests/schema.test.ts`:
+   - Import schema and client.
+   - Assert that `points` has columns id, coords, name, created_at.
+   - Optionally run `db.introspect()` or build a minimal query.
+
+Deliverables:
+- schema.ts, index.ts, schema.test.ts
+```
+
+```text
+Prompt 3: Seed script and data verification
+
+Context:
+- Drizzle schema and client are configured.
+- We need to generate 3 000 000 rows.
+
+Task:
+1. Create `scripts/seed.ts`:
+   - Connect to Drizzle client.
+   - Generate rows id=1…3 000 000 with random coords, name, created_at.
+   - Batch insert in chunks (e.g., 50 000 at a time).
+2. Add script entry in package.json: `"seed": "ts-node scripts/seed.ts"`.
+3. Write Vitest test `tests/seed.test.ts`:
+   - Run seed script (or mock generate).
+   - Open `local.db` and assert `SELECT COUNT(*) FROM points` equals 3000000.
+
+Deliverables:
+- scripts/seed.ts, seed.test.ts, updated package.json.
+```
+
+```text
+Prompt 4: Implement API endpoint with tests
+
+Context:
+- local.db is seeded.
+- Drizzle client and schema exist.
+
+Task:
+1. Create `src/lib/server/api/points.ts`:
+   - GET handler reading `count` param.
+   - Query `db.select().from(points).orderBy(points.id.asc).limit(count)`.
+   - Return JSON rows with correct header.
+2. Write Vitest + supertest integration test `tests/api/points.test.ts`:
+   - Start SvelteKit server in test mode.
+   - Call `/api/points?count=5`.
+   - Assert status 200, JSON length 5, required fields.
+
+Deliverables:
+- points.ts, points.test.ts.
+```
+
+```text
+Prompt 5: Scaffold UI and basic fetch interaction
+
+Context:
+- API endpoint is working.
+- We haven’t added ArcGIS yet.
+
+Task:
+1. Create `src/routes/+page.svelte`:
+   - Three buttons (500 K, 1 M, 3 M).
+   - `runBenchmark(count)` that disables buttons, clears results, calls `fetch`.
+   - On fetch success, push a dummy log line to `results`.
+2. Write a Svelte testing‑library test `tests/ui/fetch.test.ts`:
+   - Mock `fetch` to return `[{id:1,coords:"x,y",name:"p",created_at:"..."}]`.
+   - Render page, click “500 K”.
+   - Assert `fetch('/api/points?count=500000')` was called.
+   - Assert buttons disabled during fetch, re‑enabled after.
+   - Assert results area contains the dummy line.
+
+Deliverables:
+- +page.svelte, fetch.test.ts
+```
+
+```text
+Prompt 6: Integrate ArcGIS FeatureLayer
+
+Context:
+- UI fetches data and displays dummy logs.
+- We now integrate real ArcGIS.
+
+Task:
+1. In `+page.svelte`, import ArcGIS modules and create a `FeatureLayer` instance onMount.
+2. In `runBenchmark`, map JSON points to ArcGIS `Graphic` via `new Point({ ... })`.
+3. Call `await layer.addMany(graphics)`.
+4. Measure `t0` and `t1`, compute `dt`.
+5. Push formatted log line to `results` and console.log.
+
+6. Write Playwright E2E `tests/e2e/benchmark.spec.ts`:
+   - Stub network response for `/api/points`.
+   - Stub `addMany` to immediately resolve.
+   - Click button, wait for results, assert correct log string.
+
+Deliverables:
+- Updated +page.svelte, benchmark.spec.ts
+```
+
+```text
+Prompt 7: Extract and test logging helper
+
+Context:
+- Logging inline in UI.
+
+Task:
+1. Create `src/lib/logging.ts`:
+   - Export `formatLog(count: number, dt: number): string`.
+   - Return `[Benchmark] count=${count}, time=${dt} ms`.
+2. In `+page.svelte`, import and use `formatLog`.
+3. Write Vitest unit test `tests/logging.test.ts`:
+   - Assert `formatLog(5, 123) === '[Benchmark] count=5, time=123 ms'`.
+
+Deliverables:
+- logging.ts, logging.test.ts, updated +page.svelte.
+```
+
+```text
+Prompt 8: CI, lint‑staged, commit hooks
+
+Context:
+- All features implemented and tested.
+
+Task:
+1. Add `.github/workflows/ci.yml`:
+   - Install, lint, test.
+2. Ensure Husky pre‑commit runs `npm run lint && npm test`.
+3. Update README with CI badge and instructions.
+
+Deliverables:
+- ci.yml, README.md updates.
+```

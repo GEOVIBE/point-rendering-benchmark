@@ -24,6 +24,7 @@ vite.config.ts.timestamp-*
 
 # LLMs
 .aider.*
+repomix-output.md
 
 # SQLite
 *.db
