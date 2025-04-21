@@ -1,5 +1,7 @@
 <script lang="ts">
-	import {mountView} from "$lib/map";
+	import Point from "@arcgis/core/geometry/Point";
+	import Graphic from "@arcgis/core/Graphic";
+	import {mountView, graphicsLayer} from "$lib/map";
 
 	let viewRef: HTMLDivElement | undefined = $state();
 	let isRunning = $state(false);
@@ -17,14 +19,54 @@
 		isRunning = true;
 		result = "";
 		try {
+			graphicsLayer.visible = false;
+			graphicsLayer?.removeAll();
+
+			const startTime = new Date().valueOf();
 			const res = await fetch(`/api/points?count=${count}`);
 			if (!res.ok) throw new Error("Fetch failed");
 			const data = await res.json();
-			result = `[Benchmark] Fetched ${data.length} points`;
+
+			const graphics = data.map((pt: any) => {
+				const [lat, lon] = pt.coords.split(",").map(Number);
+				return new Graphic({
+					geometry: new Point({
+						x: lon,
+						y: lat,
+						spatialReference: {wkid: 4326},
+					}),
+					attributes: {
+						id: pt.id,
+						name: pt.name,
+						created_at: pt.created_at,
+					},
+				});
+			});
+
+			graphicsLayer.addMany(graphics);
+
+			const endTime = new Date().valueOf();
+			const dt = Math.round(endTime - startTime) / 1000;
+
+			result = `[Benchmark] count = ${count}, time = ${dt}sec`;
 		} catch (err) {
 			result = `[Error] ${err}`;
 		} finally {
 			isRunning = false;
+			for (const graphic of graphicsLayer.graphics) {
+				graphic.symbol = {
+					type: "simple-marker",
+					style: "circle",
+					color: "#38bdf8",
+					size: 4,
+					outline: {
+						color: "#0ea5e9",
+						width: 0.5,
+					},
+				};
+			}
+
+			graphicsLayer.visible = true;
 		}
 	}
 

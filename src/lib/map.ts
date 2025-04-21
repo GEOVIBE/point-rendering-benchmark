@@ -1,9 +1,16 @@
 import ArcgisMap from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer.js";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+
+export const graphicsLayer = new GraphicsLayer({
+	title: "points",
+	visible: false,
+});
 
 const map = new ArcgisMap({
 	basemap: "osm",
+	layers: [graphicsLayer],
+	
 });
 
 const view = new MapView({
@@ -23,10 +30,6 @@ const view = new MapView({
 	},
 });
 
-export const pointsLayer = new FeatureLayer({
-	title: "points",
-});
-
 export function mountView(el: HTMLDivElement) {
-	view.container = el
+	view.container = el;
 }
