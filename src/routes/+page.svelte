@@ -1,5 +1,15 @@
-<h1>Welcome to SvelteKit</h1>
-<p>
-	Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the
-	documentation
-</p>
+<script lang="ts">
+	import {mountView} from "$lib/map";
+
+	let viewRef: HTMLDivElement | undefined = $state();
+
+	$effect.pre(() => {
+		if (viewRef) {
+			mountView(viewRef);
+		}
+	});
+</script>
+
+<div class="grid min-h-dvh overflow-hidden">
+	<div bind:this={viewRef}></div>
+</div>
