@@ -1,38 +1,16 @@
-# sv
+# Benchmark: Drawing Points From DB On a Graphic Layer
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This demo is built with svelte 5, sveltekit, tailwind, ArcGIS JS SDK (core), drizzle orm, and SQLite.
 
-## Creating a project
+It draws Points From DB On a Graphic Layer, then reads features from a db, creates Point Features from a `lat,lon` coordinate string, and adds them to the Graphic Layer.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Quick Start
 
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+To start the project install the dependencies, create a DB file, seed it with records, and run project in a dev mode.
 
 ```bash
+npm i
+npm run db:push
+npm run db:seed
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
