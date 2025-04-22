@@ -5,7 +5,7 @@
 
 	let viewRef: HTMLDivElement | undefined = $state();
 	let isRunning = $state(false);
-	let result = $state("");
+	let msg = $state("");
 
 	const BUTTONS = [
 		{label: "10K", count: 10_000},
@@ -15,31 +15,25 @@
 		// {label: "3M", count: 3_000_000},
 	];
 
-	async function runBenchmark(count: number) {
-		isRunning = true;
-		result = "";
+	async function runBenchmark(count = 1) {
 		try {
+			const result = {
+				fetch: 0,
+				transform: 0,
+				draw: 0,
+				all: 0,
+			};
 			const graphicsLayer = createBlankGraphicsLayer();
-
-			graphicsLayer.visible = false;
-			graphicsLayer?.removeAll();
-
 			const startTime = new Date().valueOf();
 			const res = await fetch(`/api/points?count=${count}`);
 			if (!res.ok) throw new Error("Fetch failed");
 			const data = await res.json();
 
 			const fetchTime = new Date().valueOf();
-			console.log(
-				`[Benchmark] fetched in ${Math.round(fetchTime - startTime) / 1000}sec`
-			);
-			
+			result.fetch = Math.round(fetchTime - startTime) / 1000;
+
 			const graphics = data.map((pt: any) => {
-				// const {lat, lon} = pt;
-				// const [lat, lon] = pt.coords.split(",")
-				const str = pt.coords.split(",");
-				const lat = str[0];
-				const lon = str[1];
+				const {lat, lon} = pt;
 
 				return new Graphic({
 					geometry: new Point({
@@ -49,24 +43,17 @@
 					}),
 					attributes: {
 						id: pt.id,
-						name: pt.name,
-						created_at: pt.created_at,
 					},
 				});
 			});
 			const transformTime = new Date().valueOf();
-			console.log(
-				`[Benchmark] transformed in ${Math.round(transformTime - fetchTime) / 1000}sec`
-			);
-
+			result.transform = Math.round(transformTime - fetchTime) / 1000;
 			graphicsLayer.addMany(graphics);
-
 			const endTime = new Date().valueOf();
-			const dt = Math.round(endTime - startTime) / 1000;
-
-			const log = `[Benchmark] count = ${count}, time = ${dt}sec`;
-			console.log(log);
-			result = log;
+			const drawTime = Math.round(endTime - transformTime) / 1000;
+			const allTime = Math.round(endTime - startTime) / 1000;
+			result.draw = drawTime;
+			result.all = allTime;
 
 			// for (const graphic of graphicsLayer.graphics) {
 			// 	graphic.symbol = {
@@ -81,11 +68,53 @@
 			// 	};
 			// }
 			// graphicsLayer.visible = true;
+
+			return result;
 		} catch (err) {
-			result = `[Error] ${err}`;
-		} finally {
-			isRunning = false;
+			return {err};
 		}
+	}
+
+	async function runManualBenchmark(count: number) {
+		isRunning = true;
+		const res = await runBenchmark(count);
+		if (Object.hasOwn(res, "err")) {
+			msg = `[Benchmark] Error: ${res?.err}`;
+		} else {
+			msg = `[Benchmark] count = ${count}, time = ${res?.all}sec`;
+			console.log(count, res);
+		}
+		isRunning = false;
+	}
+
+	async function runAutoBenchmark(count = 100_000) {
+		isRunning = true;
+		const results = [];
+		for (let i = 0; i < 100; ++i) {
+			msg = `[Benchmark] auto: ${i + 1}/100`;
+			const result = await runBenchmark(count);
+			results.push(result);
+			console.log(i, result);
+		}
+
+		const filtered = results.filter((res) => {
+			if (!Object.hasOwn(res, "err")) return res;
+		});
+		const reduced = filtered.reduce((acc, obj) => {
+			for (const key in obj) {
+				if (obj.hasOwnProperty(key)) {
+					acc[key] = (acc[key] || 0) + obj[key];
+				}
+			}
+
+			return acc;
+		}, {});
+		const avg = {};
+		for (const key in reduced) {
+			avg[key] = Math.round((reduced[key] / filtered.length) * 1000) / 1000;
+		}
+		msg = `[Benchmark] ${JSON.stringify(avg)}`;
+		isRunning = false;
 	}
 
 	$effect.pre(() => {
@@ -105,15 +134,22 @@
 				<button
 					class="rounded border border-blue-700 bg-zinc-200 px-4 py-1 font-mono text-sm transition hover:bg-zinc-300 disabled:opacity-50"
 					disabled={isRunning}
-					onclick={() => runBenchmark(btn.count)}
+					onclick={() => runManualBenchmark(btn.count)}
 				>
 					{btn.label}
 				</button>
 			{/each}
+			<button
+				class="rounded border border-blue-700 bg-zinc-200 px-4 py-1 font-mono text-sm transition hover:bg-zinc-300 disabled:opacity-50"
+				disabled={isRunning}
+				onclick={() => runAutoBenchmark(100_000)}
+			>
+				100K ×100
+			</button>
 		</div>
 		<div class="ml-auto flex items-center gap-2 font-mono text-xs">
-			{#if result}
-				<span>{result}</span>
+			{#if msg}
+				<span>{msg}</span>
 			{/if}
 		</div>
 	</div>

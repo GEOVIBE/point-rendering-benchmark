@@ -1,0 +1,27 @@
+100 times for 100_000 records
+
+No display.
+
+1. Server transformation and Object assign pattern
+
+{
+  "fetch": 2.825020000000001,
+  "transform": 3.0452899999999996,
+  "draw": 5.950130000000001
+}
+
+2. Client transformation, no Array assign pattern
+
+{
+  "fetch": 4.1975999999999996,
+  "transform": 3.3752699999999987,
+  "draw": 7.65851
+}
+
+3. Client transformation, Array assign
+
+{
+  "fetch": 4.440629999999998,
+  "transform": 4.034769999999999,
+  "draw": 8.586260000000001
+}

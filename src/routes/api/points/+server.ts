@@ -8,7 +8,10 @@ export const GET: RequestHandler = async ({url}) => {
 
 	console.time(`[Server][DB] select ${count}`);
 	const records = db
-		.select()
+		.select({
+			id: points.id,
+			coords: points.coords,
+		})
 		.from(points)
 		.orderBy(points.id)
 		.limit(count)
@@ -18,13 +21,11 @@ export const GET: RequestHandler = async ({url}) => {
 	console.time(`[Server] transform ${count}`);
 	const transform = records.map((record) => {
 		const [lat, lon] = record.coords?.split(",");
-		record.lat = lat;
-		record.lon = lon;
+		const {id} = record;
 
-		return record;
+		return {id, lon, lat};
 	});
 	console.timeEnd(`[Server] transform ${count}`);
-	return json(transform);
 
-	return json(records);
+	return json(transform);
 };
