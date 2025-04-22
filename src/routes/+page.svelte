@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Point from "@arcgis/core/geometry/Point";
 	import Graphic from "@arcgis/core/Graphic";
-	import {mountView, graphicsLayer} from "$lib/map";
+	import {mountView, createBlankGraphicsLayer} from "$lib/map";
 
 	let viewRef: HTMLDivElement | undefined = $state();
 	let isRunning = $state(false);
@@ -10,15 +10,17 @@
 	const BUTTONS = [
 		{label: "10K", count: 10_000},
 		{label: "100K", count: 100_000},
-		{label: "500K", count: 500_000},
-		{label: "1M", count: 1_000_000},
-		{label: "3M", count: 3_000_000},
+		{label: "200K", count: 200_000},
+		// {label: "1M", count: 1_000_000},
+		// {label: "3M", count: 3_000_000},
 	];
 
 	async function runBenchmark(count: number) {
 		isRunning = true;
 		result = "";
 		try {
+			const graphicsLayer = createBlankGraphicsLayer();
+
 			graphicsLayer.visible = false;
 			graphicsLayer?.removeAll();
 
@@ -27,8 +29,18 @@
 			if (!res.ok) throw new Error("Fetch failed");
 			const data = await res.json();
 
+			const fetchTime = new Date().valueOf();
+			console.log(
+				`[Benchmark] fetched in ${Math.round(fetchTime - startTime) / 1000}sec`
+			);
+			
 			const graphics = data.map((pt: any) => {
-				const [lat, lon] = pt.coords.split(",").map(Number);
+				// const {lat, lon} = pt;
+				// const [lat, lon] = pt.coords.split(",")
+				const str = pt.coords.split(",");
+				const lat = str[0];
+				const lon = str[1];
+
 				return new Graphic({
 					geometry: new Point({
 						x: lon,
@@ -42,31 +54,37 @@
 					},
 				});
 			});
+			const transformTime = new Date().valueOf();
+			console.log(
+				`[Benchmark] transformed in ${Math.round(transformTime - fetchTime) / 1000}sec`
+			);
 
 			graphicsLayer.addMany(graphics);
 
 			const endTime = new Date().valueOf();
 			const dt = Math.round(endTime - startTime) / 1000;
 
-			result = `[Benchmark] count = ${count}, time = ${dt}sec`;
+			const log = `[Benchmark] count = ${count}, time = ${dt}sec`;
+			console.log(log);
+			result = log;
+
+			// for (const graphic of graphicsLayer.graphics) {
+			// 	graphic.symbol = {
+			// 		type: "simple-marker",
+			// 		style: "circle",
+			// 		color: "#38bdf8",
+			// 		size: 4,
+			// 		outline: {
+			// 			color: "#0ea5e9",
+			// 			width: 0.5,
+			// 		},
+			// 	};
+			// }
+			// graphicsLayer.visible = true;
 		} catch (err) {
 			result = `[Error] ${err}`;
 		} finally {
 			isRunning = false;
-			for (const graphic of graphicsLayer.graphics) {
-				graphic.symbol = {
-					type: "simple-marker",
-					style: "circle",
-					color: "#38bdf8",
-					size: 4,
-					outline: {
-						color: "#0ea5e9",
-						width: 0.5,
-					},
-				};
-			}
-
-			graphicsLayer.visible = true;
 		}
 	}
 

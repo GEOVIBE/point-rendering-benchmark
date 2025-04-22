@@ -2,15 +2,26 @@ import ArcgisMap from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 
-export const graphicsLayer = new GraphicsLayer({
-	title: "points",
-	visible: false,
-});
+// export const graphicsLayer = new GraphicsLayer({
+// 	title: "points",
+// 	visible: false,
+// });
+
+export function createBlankGraphicsLayer() {
+	// map.layers.filter((layer) => layer)
+	map.layers = [];
+	const graphicsLayer = new GraphicsLayer({
+		title: "points",
+		visible: false,
+	});
+	map.layers.add(graphicsLayer);
+
+	return graphicsLayer;
+}
 
 const map = new ArcgisMap({
 	basemap: "osm",
-	layers: [graphicsLayer],
-	
+	// layers: [graphicsLayer],
 });
 
 const view = new MapView({
