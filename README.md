@@ -6,10 +6,11 @@ It draws Points From DB On a Graphic Layer, then reads features from a db, creat
 
 ## Quick Start
 
-To start the project install the dependencies, create a DB file, seed it with records, and run project in a dev mode.
+To start the project install the dependencies, create `.env` file, create a DB file, seed it with records, and run project in a dev mode.
 
 ```bash
 npm i
+cp .env.example .env
 npm run db:push
 npm run db:seed
 npm run dev
